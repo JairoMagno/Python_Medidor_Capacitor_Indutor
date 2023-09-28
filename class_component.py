@@ -28,10 +28,12 @@ class Capacitor_Indutor:
     def oscilloscope(self):
         
         filename = 'oscilloscope/data.csv'
-
-        with open(filename, 'r') as f:
-            csvreader = csv.reader(f)
-            csv_list = [list(filter(lambda x: x != '', row)) for row in csvreader]
+        try:
+            with open(filename, 'r') as f:
+                csvreader = csv.reader(f)
+                csv_list = [list(filter(lambda x: x != '', row)) for row in csvreader]
+        except FileNotFoundError:
+            print(f'Arquivo {filename} não encontrado. Verifique o nome ou diretório atual.')
 
         time = []
         v_source = []
@@ -39,18 +41,15 @@ class Capacitor_Indutor:
 
         for row in csv_list[17:]:
             time.append(float(row[0]))
-            v_source.append(float(row[3]))
-            v_component.append(float(row[1]))
+            v_source.append(float(row[1]))
+            v_component.append(float(row[3]))  
         
         deslocamento = abs(time[0])
         
-        offset = 2.5
-
         if time[0] < 0:
             self.time = np.array([value + deslocamento for value in time])
         if time[0] > 0:
             self.time = np.array([value - deslocamento for value in time])
         
-        self.V_source = [value + offset for value in v_source]
-        self.V_source = np.array(self.V_source)
+        self.V_source = np.array(v_source)
         self.V_component = np.array(v_component)

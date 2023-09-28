@@ -2,7 +2,7 @@ from class_component import Capacitor_Indutor
 import functions as func
 import matplotlib.pyplot as plt
 
-component = Capacitor_Indutor(origin="oscilloscope", resistor=39_000, V_in=5, tau=4)
+component = Capacitor_Indutor(origin="oscilloscope", resistor=217, V_in=5, tau=4)
 pts_interp = 10000
 type_intp_Vcomp = "linear"
 type_intp_Vsrc = "linear"
@@ -36,9 +36,12 @@ while True:
     else:
         #Forçar o avanço da primeira amostra para o começo de um período inteiro sem interpolação
         new_time, new_V_source, new_V_component = func.advance_samples(component.time, component.V_source, component.V_component)
+    
+    #Deslocar o tempo em função do avanço de amostras
+    new_time = [value - new_time[0] for value in new_time]
 
     #Saturar a onda de entrada em 0 e 5
-    func.saturation_v_source(new_V_source)
+    func.saturation_v_source(new_V_source, component.V_in)
 
     #Descobrir o tipo de componente (capacitor ou indutor) e salvar
     type_component = func.check_type_component(component.V_in, new_V_component)
@@ -54,10 +57,11 @@ while True:
     if half_period == None:
         print("Não se conseguiu calcular o meio período")
         continue
-    print_half_period = func.format_number(half_period)
+    print_half_period = func.format_number(half_period, component.type)
     if print_half_period == "outOfRange":
         print("Formatação do meio período fora do range (m, µ, n, p).")
         continue
+    print_half_period = print_half_period[:-1]
     print("Meio periodo: ", print_half_period, end='s\n')
 
     #Calcular a quantidade de períodos totais
@@ -99,30 +103,35 @@ while True:
     if valor_calculado == None:
         print("Não foi possível calcular o valor do componente!")
         continue
-    print_valor_calculado = func.format_number(valor_calculado)
+    print_valor_calculado = func.format_number(valor_calculado, component.type)
     if print_valor_calculado == "outOfRange":
         print("Formatação do valor calculado fora do range (m, µ, n, p).")
         continue
 
-    if component.type == "capacitor":
-        print("Valor do componente: ", print_valor_calculado, end='F\n')
-    elif component.type == "inductor":
-        print("Valor do componente: ", print_valor_calculado, end='H\n')
+    print("Valor do componente: ", print_valor_calculado)
 
-    data_component = f'Capacitor = \nPeriodo = \nVai lota = \n'
+    data_component = f'Origem: {component.origin.capitalize()}\nResistor: {component.resistor}Ω\nTipo de Componente: {type_component.capitalize()}\nMeio Período: {print_half_period}s\nQuantidade Períodos: {qtd_periodos}\nValor do Componente: {print_valor_calculado}'
 
-    f, ax = plt.subplots()
+    f, ax = plt.subplots(figsize=(8,6))
+
+    #Plot das tensões
 
     ax.plot(new_time, new_V_source, label='Tensão na Fonte', color='red')
     ax.plot(new_time, new_V_component, label='Tensão no Componente', color='blue')
+
+    #Títulos das coordenadas
 
     ax.set_title('Aferição de Componente', fontsize=15)
     ax.set_xlabel('Tempo (s)', fontsize=12)
     ax.set_ylabel('Tensão (V)', fontsize=12)
 
+    #BBOX para labels externas
+
     props = dict(boxstyle='round', facecolor='grey', alpha=0.15)  # bbox features
-    ax.text(1.03, 0.98, data_component, transform=ax.transAxes, fontsize=12, verticalalignment='top', bbox=props)
+    ax.text(1.02, 0.98, data_component, transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
+    ax.legend(bbox_to_anchor=(1, 0.7))
+
+    #Chamando a figura pra ser mostrada
 
     plt.tight_layout()
-    plt.legend(loc='best')
     plt.show()

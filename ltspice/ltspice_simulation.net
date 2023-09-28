@@ -1,0 +1,7 @@
+* C:\Users\Jairo.Magno\Documents\Faculdade\Python\Python_Medidor_Capacitor_Indutor\ltspice\ltspice_simulation.asc
+R1 component source 200
+V1 source 0 PULSE(0 5 0 1n 1n 50u 100u)
+L1 component 0 1m
+.tran 0 1000m 999m
+.backanno
+.end

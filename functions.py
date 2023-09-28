@@ -4,18 +4,18 @@ from numpy import linspace
 from scipy.interpolate import griddata
 
 
-def saturation_v_source(V_source):
-    for key, value in enumerate(V_source):
-        if value < 2.5:
-            V_source[key] = 0
-        elif value >= 2.5:
-            V_source[key] = 5
-
-
 def interpolate(time, V_component, num_pontos, method_in):
     interp_time = linspace(min(time), max(time), num_pontos)
     interp_values = griddata(time, V_component, interp_time, method=method_in, fill_value=0)
     return interp_time, interp_values
+
+
+def saturation_v_source(V_source, V_in):
+    for key, value in enumerate(V_source):
+        if value < V_in/2:
+            V_source[key] = 0
+        elif value >= V_in/2:
+            V_source[key] = V_in
 
 
 def advance_samples(time, V_source, V_component, V_in):
@@ -104,7 +104,7 @@ def check_charge_component(component, V_in, V_component, time,  half_period, tau
 
         #Verifica se o capacitor é muito pequeno (de acordo com a frequência)
         for key, value in enumerate(V_component):
-            if (value >= V_in*0.612) and (value <= V_in*0.652):
+            if (value >= V_in*0.622) and (value <= V_in*0.642):
                 if time[key] <= half_period/div_per_cap:
                     return "smallCapacitor"
                 else:
@@ -113,9 +113,8 @@ def check_charge_component(component, V_in, V_component, time,  half_period, tau
         
         return tau_time_cap
 
-    if component == "indutor":
+    if component == "inductor":
 
-        print("Maximo: ", max(V_component))
         #Checa se o indutor é muito grande, checa a constante de tempo passada como parametro (de acordo com a frequência)
         for key, value in enumerate(V_component):
             if (abs(time[key] - half_period) <= half_period/20):
@@ -147,11 +146,11 @@ def check_charge_component(component, V_in, V_component, time,  half_period, tau
 
 def get_value(component, tau_time, resistor):
     if component == "capacitor": return tau_time/resistor
-    elif component == "indutor": return tau_time*resistor
+    elif component == "inductor": return tau_time*resistor
     else: return None
 
 
-def format_number(number):
+def format_number(number, component):
     qtd_mlt = 0
     if number < 1:
         while (number<1):
@@ -172,7 +171,10 @@ def format_number(number):
     else:
         return "outOfRange"
     
-    return new_number
+    if component == 'capacitor':
+        return new_number + 'F'
+    elif component == 'inductor':
+        return new_number + 'H'
 
 
 def relatione(num):
