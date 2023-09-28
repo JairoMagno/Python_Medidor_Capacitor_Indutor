@@ -62,8 +62,8 @@ def check_half_period(time, V_source, V_in):
         previous_value = value
 
     return None
+    
                 
-
 def check_amount_periods(time, half_period):
     amt_per = (max(time) - min(time))/(2*half_period)
     if amt_per <= 3.9:  return "fewPeriods"         #4 periods

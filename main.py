@@ -2,7 +2,7 @@ from class_component import Capacitor_Indutor
 import functions as func
 import matplotlib.pyplot as plt
 
-component = Capacitor_Indutor(origin="simulator", resistor=1000, V_in=5, tau=4)
+component = Capacitor_Indutor(origin="oscilloscope", resistor=39_000, V_in=5, tau=4)
 pts_interp = 10000
 type_intp_Vcomp = "linear"
 type_intp_Vsrc = "linear"
@@ -22,11 +22,14 @@ while True:
         continue
 
     #Interpolação dos dados
-    interp_time, interp_V_component = func.interpolate(component.time, component.V_component, pts_interp, type_intp_Vcomp)
-    _,           interp_V_source    = func.interpolate(component.time, component.V_source, pts_interp, type_intp_Vsrc)
+    if len(component.time)<pts_interp:
+        interp_time, interp_V_component = func.interpolate(component.time, component.V_component, pts_interp, type_intp_Vcomp)
+        _,           interp_V_source    = func.interpolate(component.time, component.V_source, pts_interp, type_intp_Vsrc)
 
-    #Forçar o avanço da primeira amostra para o começo de um período inteiro
-    new_time, new_V_source, new_V_component = func.advance_samples(interp_time, interp_V_source, interp_V_component, component.V_in)
+        #Forçar o avanço da primeira amostra para o começo de um período inteiro
+        new_time, new_V_source, new_V_component = func.advance_samples(interp_time, interp_V_source, interp_V_component, component.V_in)
+    else:
+        new_time, new_V_source, new_V_component = component.time, component.V_source, component.V_component
 
     #Descobrir o tipo de componente (capacitor ou indutor) e salvar
     type_component = func.check_type_component(component.V_in, new_V_component)
@@ -35,6 +38,10 @@ while True:
     else:
         print("Componente não reconhecido.")
         continue
+
+    plt.plot(new_time, new_V_source)
+    plt.plot(new_time, new_V_component)
+    plt.show()
 
     #Calcular a metade de um período da onda quadrada de teste
     half_period = func.check_half_period(new_time, new_V_source, component.V_in)
@@ -99,4 +106,3 @@ while True:
     plt.plot(new_time, new_V_source)
     plt.plot(new_time, new_V_component)
     plt.show()
-
