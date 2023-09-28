@@ -36,18 +36,21 @@ class Capacitor_Indutor:
         time = []
         v_source = []
         v_component = []
+
         for row in csv_list[17:]:
             time.append(float(row[0]))
             v_source.append(float(row[3]))
             v_component.append(float(row[1]))
         
         deslocamento = abs(time[0])
+        
         offset = 2.5
+
         if time[0] < 0:
             self.time = np.array([value + deslocamento for value in time])
         if time[0] > 0:
             self.time = np.array([value - deslocamento for value in time])
         
-        self.V_source = np.array([value + offset for value in v_source])
-        self.V_source = [np.maximum(arr, 0) for arr in self.V_source]
+        self.V_source = [value + offset for value in v_source]
+        self.V_source = np.array(self.V_source)
         self.V_component = np.array(v_component)

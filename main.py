@@ -10,7 +10,10 @@ type_intp_Vsrc = "linear"
 while True:
 
     #Pause
-    input("Tecle enter para iniciar/reiniciar.\n")
+    opc = input("Tecle enter para iniciar/reiniciar, tecle 's' para sair.\n")
+    if opc == 's':
+        print("Finalizando...")
+        break
 
     #Chamar o método da aquisição de dados
     if component.origin == "simulator":
@@ -20,28 +23,31 @@ while True:
     else:
         print("Origem de captura não conhecida.")
         continue
+    print("Origem: ", component.origin)
+    print("Resistor: ", component.resistor, end='Ω\n')
 
     #Interpolação dos dados
     if len(component.time)<pts_interp:
         interp_time, interp_V_component = func.interpolate(component.time, component.V_component, pts_interp, type_intp_Vcomp)
         _,           interp_V_source    = func.interpolate(component.time, component.V_source, pts_interp, type_intp_Vsrc)
 
-        #Forçar o avanço da primeira amostra para o começo de um período inteiro
+        #Forçar o avanço da primeira amostra para o começo de um período inteiro sem interpolação
         new_time, new_V_source, new_V_component = func.advance_samples(interp_time, interp_V_source, interp_V_component, component.V_in)
     else:
-        new_time, new_V_source, new_V_component = component.time, component.V_source, component.V_component
+        #Forçar o avanço da primeira amostra para o começo de um período inteiro sem interpolação
+        new_time, new_V_source, new_V_component = func.advance_samples(component.time, component.V_source, component.V_component)
+
+    #Saturar a onda de entrada em 0 e 5
+    func.saturation_v_source(new_V_source)
 
     #Descobrir o tipo de componente (capacitor ou indutor) e salvar
     type_component = func.check_type_component(component.V_in, new_V_component)
     if type_component != None:
-        component.type = type_component 
+        component.type = type_component
+        print("Tipo de componente: ", component.type)
     else:
         print("Componente não reconhecido.")
         continue
-
-    plt.plot(new_time, new_V_source)
-    plt.plot(new_time, new_V_component)
-    plt.show()
 
     #Calcular a metade de um período da onda quadrada de teste
     half_period = func.check_half_period(new_time, new_V_source, component.V_in)
@@ -103,6 +109,20 @@ while True:
     elif component.type == "inductor":
         print("Valor do componente: ", print_valor_calculado, end='H\n')
 
-    plt.plot(new_time, new_V_source)
-    plt.plot(new_time, new_V_component)
+    data_component = f'Capacitor = \nPeriodo = \nVai lota = \n'
+
+    f, ax = plt.subplots()
+
+    ax.plot(new_time, new_V_source, label='Tensão na Fonte', color='red')
+    ax.plot(new_time, new_V_component, label='Tensão no Componente', color='blue')
+
+    ax.set_title('Aferição de Componente', fontsize=15)
+    ax.set_xlabel('Tempo (s)', fontsize=12)
+    ax.set_ylabel('Tensão (V)', fontsize=12)
+
+    props = dict(boxstyle='round', facecolor='grey', alpha=0.15)  # bbox features
+    ax.text(1.03, 0.98, data_component, transform=ax.transAxes, fontsize=12, verticalalignment='top', bbox=props)
+
+    plt.tight_layout()
+    plt.legend(loc='best')
     plt.show()

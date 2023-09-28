@@ -4,6 +4,14 @@ from numpy import linspace
 from scipy.interpolate import griddata
 
 
+def saturation_v_source(V_source):
+    for key, value in enumerate(V_source):
+        if value < 2.5:
+            V_source[key] = 0
+        elif value >= 2.5:
+            V_source[key] = 5
+
+
 def interpolate(time, V_component, num_pontos, method_in):
     interp_time = linspace(min(time), max(time), num_pontos)
     interp_values = griddata(time, V_component, interp_time, method=method_in, fill_value=0)
